@@ -7,6 +7,7 @@ correct implementation of Kruskal's algorithm and proper maze generation.
 
 import unittest
 import os
+import tempfile
 from disjoint_set import DisjointSet
 from maze_generator import MazeGenerator
 
@@ -167,28 +168,31 @@ class TestMazeGenerator(unittest.TestCase):
         maze = MazeGenerator(3, 3, seed=42)
         maze.generate()
         
-        test_filename = '/tmp/test_maze.txt'
-        maze.save_to_file(test_filename)
+        # Use tempfile for cross-platform compatibility
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+            test_filename = f.name
         
-        # File should exist
-        self.assertTrue(os.path.exists(test_filename))
-        
-        # File should contain maze content
-        with open(test_filename, 'r') as f:
-            content = f.read()
-            self.assertTrue(len(content) > 0)
-            self.assertIn('+', content)
-        
-        # Clean up
-        os.remove(test_filename)
+        try:
+            maze.save_to_file(test_filename)
+            
+            # File should exist
+            self.assertTrue(os.path.exists(test_filename))
+            
+            # File should contain maze content
+            with open(test_filename, 'r') as f:
+                content = f.read()
+                self.assertTrue(len(content) > 0)
+                self.assertIn('+', content)
+        finally:
+            # Clean up
+            if os.path.exists(test_filename):
+                os.remove(test_filename)
     
     def test_maze_connectivity(self):
         """
         Test that generated maze is fully connected.
         This is a crucial property of perfect mazes.
         """
-        from disjoint_set import DisjointSet
-        
         maze = MazeGenerator(5, 5)
         maze.generate()
         
